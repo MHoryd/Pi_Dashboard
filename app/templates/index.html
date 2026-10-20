@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Raspberry Pi Dashboard</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen font-sans">
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-950/50 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="bg-red-500/10 p-2 rounded-lg border border-red-500/20 text-red-400">
+          <i data-lucide="cpu" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="font-bold text-lg leading-tight">Raspberry Pi Dashboard</h1>
+          <p class="text-xs text-slate-400 flex items-center gap-1.5 mt-0.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            System Live Status
+          </p>
+        </div>
+      </div>
+      
+      <!-- Refresh Status -->
+      <div class="text-xs text-slate-400 flex items-center gap-2">
+        <span>Last updated: <span id="last-updated" class="text-slate-200">--:--:--</span></span>
+        <button id="refresh-btn" class="p-2 hover:bg-slate-800 rounded-lg transition-colors border border-slate-800 text-slate-300">
+          <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="max-w-6xl mx-auto px-4 py-8 space-y-6">
+
+    <!-- Top Grid: Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+      <!-- Temperature Card -->
+      <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-400 mb-2">
+          <span class="text-sm font-medium">CPU Temperature</span>
+          <i data-lucide="thermometer" class="w-5 h-5 text-amber-400"></i>
+        </div>
+        <div class="flex items-baseline gap-2 my-2">
+          <span id="temp-value" class="text-4xl font-extrabold text-slate-100">--</span>
+          <span class="text-xl font-semibold text-slate-400">°C</span>
+        </div>
+        <div class="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden mt-3">
+          <div id="temp-bar" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Overall CPU Card -->
+      <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-400 mb-2">
+          <span class="text-sm font-medium">Average CPU Usage</span>
+          <i data-lucide="activity" class="w-5 h-5 text-indigo-400"></i>
+        </div>
+        <div class="flex items-baseline gap-2 my-2">
+          <span id="cpu-avg" class="text-4xl font-extrabold text-slate-100">--</span>
+          <span class="text-xl font-semibold text-slate-400">%</span>
+        </div>
+        <div class="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden mt-3">
+          <div id="cpu-avg-bar" class="h-full bg-indigo-500 transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Overall RAM Card -->
+      <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-5 flex flex-col justify-between">
+        <div class="flex items-center justify-between text-slate-400 mb-2">
+          <span class="text-sm font-medium">Memory Usage</span>
+          <i data-lucide="hard-drive" class="w-5 h-5 text-cyan-400"></i>
+        </div>
+        <div class="flex items-baseline gap-2 my-2">
+          <span id="memory-percent" class="text-4xl font-extrabold text-slate-100">--</span>
+          <span class="text-xl font-semibold text-slate-400">%</span>
+        </div>
+        <div class="w-full bg-slate-700/50 h-2 rounded-full overflow-hidden mt-3">
+          <div id="memory-bar" class="h-full bg-cyan-500 transition-all duration-500" style="width: 0%"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Detailed Section Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+      <!-- CPU Core Details -->
+      <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+        <h2 class="text-base font-semibold mb-4 flex items-center gap-2 text-slate-200">
+          <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i>
+          CPU Core Utilization
+        </h2>
+        <div id="cpu-cores-container" class="space-y-4">
+          <!-- Dynamically populated core bars -->
+          <div class="text-slate-500 text-sm">Loading CPU cores...</div>
+        </div>
+      </div>
+
+      <!-- RAM Details -->
+      <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6 flex flex-col justify-between">
+        <div>
+          <h2 class="text-base font-semibold mb-4 flex items-center gap-2 text-slate-200">
+            <i data-lucide="pie-chart" class="w-4 h-4 text-cyan-400"></i>
+            Memory Details
+          </h2>
+          <div class="space-y-3 text-sm">
+            <div class="flex justify-between py-2 border-b border-slate-700/50">
+              <span class="text-slate-400">Total RAM</span>
+              <span id="mem-total" class="font-medium text-slate-200">-- MB</span>
+            </div>
+            <div class="flex justify-between py-2 border-b border-slate-700/50">
+              <span class="text-slate-400">Used RAM</span>
+              <span id="mem-used" class="font-medium text-slate-200">-- MB</span>
+            </div>
+            <div class="flex justify-between py-2">
+              <span class="text-slate-400">Free RAM</span>
+              <span id="mem-free" class="font-medium text-slate-200">-- MB</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-4 bg-slate-900/50 rounded-lg border border-slate-800 mt-6 flex justify-around text-center">
+          <div>
+            <p class="text-xs text-slate-400">Used</p>
+            <p id="mem-used-card" class="text-lg font-bold text-cyan-400">-- MB</p>
+          </div>
+          <div class="border-r border-slate-800"></div>
+          <div>
+            <p class="text-xs text-slate-400">Free</p>
+            <p id="mem-free-card" class="text-lg font-bold text-emerald-400">-- MB</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="/static/js/dashboard.js"></script>
+  <script>
+    // Initialize icons
+    lucide.createIcons();
+  </script>
+</body>
+</html>
