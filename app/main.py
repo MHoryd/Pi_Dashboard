@@ -16,3 +16,8 @@ app.include_router(sys_info.router)
 def main():
     html_file = BASE_DIR / "templates" / "index.html"
     return html_file.read_text(encoding="utf-8")
+
+
+@app.get("/health")
+def health():
+    return {"status": "healthy"}

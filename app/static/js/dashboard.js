@@ -1,32 +1,46 @@
-// Point this to your actual sysinfo endpoint route
-const API_ENDPOINT = '/base_info'; 
+const BASE_INFO_ENDPOINT = '/base_info';
+const DOCKER_INFO_ENDPOINT = '/docker_info';
 
-async function fetchSysInfo() {
-  try {
-    const response = await fetch(API_ENDPOINT);
-    if (!response.ok) throw new Error('Network response was not ok');
-    
-    const data = await response.json();
-    updateDashboard(data);
-  } catch (error) {
-    console.error('Failed to fetch system info:', error);
-  }
-}
-
-function updateDashboard(data) {
+async function fetchDashboardData() {
   // Update timestamp
   const now = new Date();
   document.getElementById('last-updated').textContent = now.toLocaleTimeString();
 
+  // 1. Fetch Base System Info
+  try {
+    const response = await fetch(BASE_INFO_ENDPOINT);
+    if (response.ok) {
+      const data = await response.json();
+      updateSystemInfo(data);
+    } else {
+      console.error('Base info response failed:', response.status);
+    }
+  } catch (error) {
+    console.error('Error fetching base info:', error);
+  }
+
+  // 2. Fetch Docker Info
+  try {
+    const response = await fetch(DOCKER_INFO_ENDPOINT);
+    if (response.ok) {
+      const data = await response.json();
+      updateDockerInfo(data);
+    } else {
+      console.error('Docker info response failed:', response.status);
+    }
+  } catch (error) {
+    console.error('Error fetching docker info:', error);
+  }
+}
+
+function updateSystemInfo(data) {
   // 1. Temperature
-  const temp = parseFloat(data.current_temp);
+  const temp = parseFloat(data.current_temp || 0);
   document.getElementById('temp-value').textContent = temp.toFixed(1);
   const tempBar = document.getElementById('temp-bar');
-  // Assuming 80°C as maximum safe threshold for Pi scaling bar percentage
-  const tempPct = Math.min(100, Math.max(0, (temp / 80) * 100)); 
+  const tempPct = Math.min(100, Math.max(0, (temp / 80) * 100));
   tempBar.style.width = `${tempPct}%`;
 
-  // Dynamic bar color base on temp
   if (temp > 70) {
     tempBar.className = 'h-full bg-red-500 transition-all duration-500';
   } else if (temp > 55) {
@@ -37,7 +51,7 @@ function updateDashboard(data) {
 
   // 2. CPU Usage
   const cpuUsages = data.cpu_usage || [];
-  const avgCpu = cpuUsages.length 
+  const avgCpu = cpuUsages.length
     ? (cpuUsages.reduce((a, b) => a + b, 0) / cpuUsages.length).toFixed(1)
     : 0;
 
@@ -81,9 +95,48 @@ function updateDashboard(data) {
   document.getElementById('mem-free-card').textContent = `${freeMb.toFixed(1)} MB`;
 }
 
+function updateDockerInfo(containers) {
+  const tbody = document.getElementById('docker-tbody');
+  const countBadge = document.getElementById('docker-count');
+
+  if (!Array.isArray(containers)) return;
+
+  countBadge.textContent = `${containers.length} container${containers.length === 1 ? '' : 's'}`;
+  tbody.innerHTML = '';
+
+  if (containers.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="3" class="py-4 px-4 text-center text-slate-500">No Docker containers found</td></tr>`;
+    return;
+  }
+
+  containers.forEach(container => {
+    const isRunning = container.container_state && container.container_state.toLowerCase() === 'running';
+
+    const badgeClass = isRunning
+      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+      : 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+
+    const tr = document.createElement('tr');
+    tr.className = 'hover:bg-slate-800/30 transition-colors';
+    tr.innerHTML = `
+      <td class="py-3 px-4 font-medium text-slate-200 flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full ${isRunning ? 'bg-emerald-500' : 'bg-amber-500'}"></span>
+        ${container.container_name || 'unknown'}
+      </td>
+      <td class="py-3 px-4">
+        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${badgeClass}">
+          ${container.container_state || 'unknown'}
+        </span>
+      </td>
+      <td class="py-3 px-4 text-slate-400 text-xs">${container.container_status || '-'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
 // Event Listeners & Auto-refresh (Every 3 seconds)
-document.getElementById('refresh-btn').addEventListener('click', fetchSysInfo);
+document.getElementById('refresh-btn').addEventListener('click', fetchDashboardData);
 
 // Initial Load & Interval
-fetchSysInfo();
-setInterval(fetchSysInfo, 3000);
+fetchDashboardData();
+setInterval(fetchDashboardData, 3000);

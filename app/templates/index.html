@@ -26,7 +26,7 @@
           </p>
         </div>
       </div>
-      
+
       <!-- Refresh Status -->
       <div class="text-xs text-slate-400 flex items-center gap-2">
         <span>Last updated: <span id="last-updated" class="text-slate-200">--:--:--</span></span>
@@ -100,7 +100,6 @@
           CPU Core Utilization
         </h2>
         <div id="cpu-cores-container" class="space-y-4">
-          <!-- Dynamically populated core bars -->
           <div class="text-slate-500 text-sm">Loading CPU cores...</div>
         </div>
       </div>
@@ -142,11 +141,39 @@
       </div>
 
     </div>
+
+    <!-- Full-Width Row: Docker Containers -->
+    <div class="bg-slate-800/50 border border-slate-700/50 rounded-xl p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-base font-semibold flex items-center gap-2 text-slate-200">
+          <i data-lucide="box" class="w-4 h-4 text-sky-400"></i>
+          Docker Containers
+        </h2>
+        <span id="docker-count" class="text-xs px-2.5 py-1 bg-slate-700/50 border border-slate-600/50 rounded-full text-slate-300">0 containers</span>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm text-slate-300">
+          <thead class="bg-slate-900/40 border-b border-slate-700/50 text-xs text-slate-400 uppercase">
+            <tr>
+              <th class="py-3 px-4">Container Name</th>
+              <th class="py-3 px-4">State</th>
+              <th class="py-3 px-4">Status Description</th>
+            </tr>
+          </thead>
+          <tbody id="docker-tbody" class="divide-y divide-slate-700/30">
+            <tr>
+              <td colspan="3" class="py-4 px-4 text-center text-slate-500">Loading Docker containers...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 
   <script src="/static/js/dashboard.js"></script>
   <script>
-    // Initialize icons
     lucide.createIcons();
   </script>
 </body>
